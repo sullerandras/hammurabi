@@ -7,8 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <style>
-  input { font-size: 1.6em; }
-  .min, .max { background-color: #aca; padding: 4px; border-radius: 5px; padding-bottom: 1px; }
+  button { font-size: 1.6em; }
+  input { font-size: 1.6em; width: 100px; }
+  .boundaries { font-size: 1.6em; }
+  .min, .max { background-color: #aca; padding: 4px 8px; border-radius: 10px; padding-bottom: 1px; }
   </style>
   <script src="lib/angular.min.js"></script>
   <script>
@@ -99,7 +101,7 @@
         limits: '=limits',
         model: '=model'
       },
-      template: '<span class="min" ng-click="setMin()">{{limits.min}}</span> - <span class="max" ng-click="setMax()">{{limits.max}}</span>'
+      template: '<span class="boundaries"><span class="min" ng-click="setMin()">{{limits.min}}</span> - <span class="max" ng-click="setMax()">{{limits.max}}</span></span>'
     };
   });
   app.controller('AppController', function($rootScope, $scope){
