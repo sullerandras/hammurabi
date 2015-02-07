@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html ng-controller="AppController">
+<head>
+  <title>Hammurabi game</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <style>
+  input { font-size: 1.6em; }
+  </style>
+  <script src="lib/angular.min.js"></script>
+  <script>
+  function Game(){
+    this.starved = 0
+    this.immigrants = 5
+    this.population = 100
+    this.harvest = 3000          // total bushels harvested
+    this.bushels_per_acre = 3    // amount harvested for each acre planted
+    this.rats_ate = 200          // bushels destroyed by rats
+    this.bushels_in_storage = 2800
+    this.acres_owned = 1000
+    this.cost_per_acre = 19      // each acre costs this many bushels
+    this.plague_deaths = 0
+    this.year = 1
+
+    this.go = function(input){
+      this.year++
+      this.buy_land(input.buy)
+      this.calculate_plague()
+      this.calculate_starved(input.feed)
+      this.calculate_immigrants()
+      this.calculate_harvest(input.planted)
+      this.calculate_rats()
+      this.calculate_cost_per_acre()
+    }
+    this.buy_land = function(buy){
+      this.acres_owned += buy
+      this.bushels_in_storage -= buy * this.cost_per_acre
+    }
+    this.calculate_plague = function(){
+      this.plague_deaths = 0
+      if (Math.random() < 0.15) {
+        this.plague_deaths = Math.floor(this.population / 2)
+        this.population -= this.plague_deaths
+      }
+    }
+    this.calculate_starved = function(feed){
+      var enough_food_for = Math.floor(feed / 20)
+      this.starved = Math.max(0, this.population - enough_food_for)
+      this.bushels_in_storage -= feed
+      this.population -= this.starved
+    }
+    this.calculate_immigrants = function(){
+      this.immigrants = 0
+      if (this.starved == 0){
+        this.immigrants = Math.floor((20 * this.acres_owned + this.bushels_in_storage) / (100 * this.population)) + 1
+        this.population += this.immigrants
+      }
+    }
+    this.calculate_harvest = function(planted){
+      this.bushels_per_acre = Math.floor(Math.random() * 8) + 1
+      this.harvest = this.bushels_per_acre * planted
+      this.bushels_in_storage += this.harvest - planted
+    }
+    this.calculate_rats = function(){
+      this.rats_ate = 0
+      if (Math.random() < 0.4){
+        this.rats_ate = Math.floor((Math.random() * 0.2 + 0.1) * this.bushels_in_storage)
+        this.bushels_in_storage -= this.rats_ate
+      }
+    }
+    this.calculate_cost_per_acre = function(){
+      this.cost_per_acre = Math.floor(Math.random() * 7) + 17
+    }
+  }
+  function to_i(value){
+    value = parseInt(value)
+    if (isNaN(value)){
+      value = 0
+    }
+    return value
+  }
+  app = angular.module("myApp", [])
+  app.controller('AppController', function($rootScope, $scope){
+    $scope.input = {}
+    $scope.game = new Game()
+    $scope.history = [ angular.copy($scope.game) ]
+    $scope.remaining_bushels = $scope.game.bushels_in_storage
+    $scope.go = function(){
+      if ($scope.remaining_bushels < 0){
+        window.alert('Not enough bushels!')
+        return
+      }
+      var i = $scope.input
+      $scope.game.go({buy: to_i(i.buy), feed: to_i(i.feed), planted: to_i(i.planted)})
+      $scope.input = {}
+      $scope.history.splice(0, 0, angular.copy($scope.game))
+    }
+    $scope.min = Math.min
+    $scope.floor = Math.floor
+    $scope.to_i = to_i
+    $scope.$watch('input', function(){
+      var game = $scope.game
+      var input = $scope.input
+      $scope.remaining_bushels =
+        game.bushels_in_storage -
+        (to_i(input.buy) * game.cost_per_acre) -
+        to_i(input.feed) -
+        to_i(input.planted)
+    }, true)
+  })
+  </script>
+</head>
+<body>
+  <div class="instructions">
+    <p>Congratulations, you are the newest ruler of ancient Samaria, elected
+    for a ten year term of office. Your duties are to dispense food, direct
+    farming, and buy and sell land as needed to support your people. Watch
+    out for rat infestations and the plague! Grain is the general currency,
+    measured in bushels. The following will help you in your decisions:</p>
+    <ul>
+      <li>Each person needs at least 20 bushels of grain per year to survive.</li>
+      <li>Each person can farm at most 10 acres of land.</li>
+      <li>It takes 1 bushels of grain to farm an acre of land.</li>
+      <li>The market price for land fluctuates yearly.</li>
+    </ul>
+    <p>Rule wisely and you will be showered with appreciation at the end of
+    your term. Rule poorly and you will be kicked out of office!</p>
+  </div>
+  <div class="game">
+    O great Hammurabi!<br>
+    You are in year {{game.year}} of your ten year rule.<br>
+    In the previous year {{game.starved}} people starved to death.<br>
+    In the previous year {{game.immigrants}} people entered the kingdom.<br>
+    The population is now {{game.population}}.<br>
+    We harvested {{game.harvest}} bushels at {{game.bushels_per_acre}} bushels per acre.<br>
+    Rats destroyed {{game.rats_ate}} bushels, leaving {{game.bushels_in_storage}} bushels in storage.<br>
+    The city owns {{game.acres_owned}} acres of land.<br>
+    Land is currently worth {{game.cost_per_acre}} bushels per acre.<br>
+    There were {{game.plague_deaths}} deaths from the plague.<br>
+  </div>
+  <form class="form" ng-submit="go()">
+    <p>How many acres of land to buy? <input type="number" ng-model="input.buy"> {{-(game.acres_owned - to_i(input.planted))}} - {{floor((remaining_bushels + to_i(input.buy) * game.cost_per_acre) / game.cost_per_acre) | number:0}} Enter a negative number to sell.</p>
+    <p>How much grain to feed to the people? <input type="number" ng-model="input.feed"> {{0}} - {{min(remaining_bushels + to_i(input.feed), 20 * game.population)}} Need 20 bushels per person.</p>
+    <p>How many acres to plant with seed? <input type="number" ng-model="input.planted"> {{0}} - {{min(game.acres_owned + to_i(input.buy), 10 * game.population, remaining_bushels + to_i(input.planted))}} Need 1 bushel per acre.</p>
+    <p>Remaining bushels: {{remaining_bushels}}</p>
+    <button type="submit">Go on</button>
+  </form>
+  <div class="history">
+    <table>
+      <thead>
+        <tr>
+          <td>year</td>
+          <td>starved</td>
+          <td>immigrants</td>
+          <td>population</td>
+          <td>harvest</td>
+          <td>bushels/acre</td>
+          <td>rats ate</td>
+          <td>bushels in storage</td>
+          <td>acres owned</td>
+          <td>cost/acre</td>
+          <td>plague deaths</td>
+        </tr>
+      </thead>
+      <tr ng-repeat="game in history">
+        <td>{{game.year}}</td>
+        <td>{{game.starved}}</td>
+        <td>{{game.immigrants}}</td>
+        <td>{{game.population}}</td>
+        <td>{{game.harvest}}</td>
+        <td>{{game.bushels_per_acre}}</td>
+        <td>{{game.rats_ate}}</td>
+        <td>{{game.bushels_in_storage}}</td>
+        <td>{{game.acres_owned}}</td>
+        <td>{{game.cost_per_acre}}</td>
+        <td>{{game.plague_deaths}}</td>
+      </tr>
+    </table>
+  </div>
+  <script>
+  angular.bootstrap(document, ['myApp'])
+  </script>
+</body>
+</html>
