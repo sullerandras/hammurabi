@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <style>
   input { font-size: 1.6em; }
+  .min, .max { background-color: #aca; padding: 4px; border-radius: 5px; padding-bottom: 1px; }
   </style>
   <script src="lib/angular.min.js"></script>
   <script>
@@ -82,6 +83,25 @@
     return value
   }
   app = angular.module("myApp", [])
+  app.directive('boundaries', function() {
+    function link(scope, element, attrs) {
+      scope.setMin = function(){
+        scope.model = scope.limits.min
+      }
+      scope.setMax = function(){
+        scope.model = scope.limits.max
+      }
+    }
+    return {
+      link: link,
+      restrict: 'E',
+      scope: {
+        limits: '=limits',
+        model: '=model'
+      },
+      template: '<span class="min" ng-click="setMin()">{{limits.min}}</span> - <span class="max" ng-click="setMax()">{{limits.max}}</span>'
+    };
+  });
   app.controller('AppController', function($rootScope, $scope){
     $scope.input = {}
     $scope.limits = {}
@@ -153,9 +173,9 @@
     There were {{game.plague_deaths}} deaths from the plague.<br>
   </div>
   <form class="form" ng-submit="go()">
-    <p>How many acres of land to buy? <input type="number" ng-model="input.buy"> {{limits.buy.min}} - {{limits.buy.max}} Enter a negative number to sell.</p>
-    <p>How much grain to feed to the people? <input type="number" ng-model="input.feed"> {{limits.feed.min}} - {{limits.feed.max}} Need 20 bushels per person.</p>
-    <p>How many acres to plant with seed? <input type="number" ng-model="input.planted"> {{limits.planted.min}} - {{limits.planted.max}} Need 1 bushel per acre.</p>
+    <p>How many acres of land to buy? <input type="number" ng-model="input.buy"> <boundaries limits="limits.buy" model="input.buy"></boundaries> Enter a negative number to sell.</p>
+    <p>How much grain to feed to the people? <input type="number" ng-model="input.feed"> <boundaries limits="limits.feed" model="input.feed"></boundaries> Need 20 bushels per person.</p>
+    <p>How many acres to plant with seed? <input type="number" ng-model="input.planted"> <boundaries limits="limits.planted" model="input.planted"></boundaries> Need 1 bushel per acre.</p>
     <p>Remaining bushels: {{remaining_bushels}}</p>
     <button type="submit">Go on</button>
   </form>
