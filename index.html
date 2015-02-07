@@ -84,6 +84,7 @@
   app = angular.module("myApp", [])
   app.controller('AppController', function($rootScope, $scope){
     $scope.input = {}
+    $scope.limits = {}
     $scope.game = new Game()
     $scope.history = [ angular.copy($scope.game) ]
     $scope.remaining_bushels = $scope.game.bushels_in_storage
@@ -97,9 +98,6 @@
       $scope.input = {}
       $scope.history.splice(0, 0, angular.copy($scope.game))
     }
-    $scope.min = Math.min
-    $scope.floor = Math.floor
-    $scope.to_i = to_i
     $scope.$watch('input', function(){
       var game = $scope.game
       var input = $scope.input
@@ -108,6 +106,20 @@
         (to_i(input.buy) * game.cost_per_acre) -
         to_i(input.feed) -
         to_i(input.planted)
+      $scope.limits = {
+        buy: {
+          min: -(game.acres_owned - to_i(input.planted)),
+          max: Math.floor(($scope.remaining_bushels + to_i(input.buy) * game.cost_per_acre) / game.cost_per_acre)
+        },
+        feed: {
+          min: 0,
+          max: Math.min($scope.remaining_bushels + to_i(input.feed), 20 * game.population)
+        },
+        planted: {
+          min: 0,
+          max: Math.min(game.acres_owned + to_i(input.buy), 10 * game.population, $scope.remaining_bushels + to_i(input.planted))
+        }
+      }
     }, true)
   })
   </script>
@@ -141,9 +153,9 @@
     There were {{game.plague_deaths}} deaths from the plague.<br>
   </div>
   <form class="form" ng-submit="go()">
-    <p>How many acres of land to buy? <input type="number" ng-model="input.buy"> {{-(game.acres_owned - to_i(input.planted))}} - {{floor((remaining_bushels + to_i(input.buy) * game.cost_per_acre) / game.cost_per_acre) | number:0}} Enter a negative number to sell.</p>
-    <p>How much grain to feed to the people? <input type="number" ng-model="input.feed"> {{0}} - {{min(remaining_bushels + to_i(input.feed), 20 * game.population)}} Need 20 bushels per person.</p>
-    <p>How many acres to plant with seed? <input type="number" ng-model="input.planted"> {{0}} - {{min(game.acres_owned + to_i(input.buy), 10 * game.population, remaining_bushels + to_i(input.planted))}} Need 1 bushel per acre.</p>
+    <p>How many acres of land to buy? <input type="number" ng-model="input.buy"> {{limits.buy.min}} - {{limits.buy.max}} Enter a negative number to sell.</p>
+    <p>How much grain to feed to the people? <input type="number" ng-model="input.feed"> {{limits.feed.min}} - {{limits.feed.max}} Need 20 bushels per person.</p>
+    <p>How many acres to plant with seed? <input type="number" ng-model="input.planted"> {{limits.planted.min}} - {{limits.planted.max}} Need 1 bushel per acre.</p>
     <p>Remaining bushels: {{remaining_bushels}}</p>
     <button type="submit">Go on</button>
   </form>
