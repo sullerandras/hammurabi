@@ -201,6 +201,7 @@
           <td>acres owned</td>
           <td>cost/acre</td>
           <td>plague deaths</td>
+          <td>points</td>
         </tr>
       </thead>
       <tr ng-repeat="game in history">
@@ -215,6 +216,7 @@
         <td>{{game.acres_owned}}</td>
         <td>{{game.cost_per_acre}}</td>
         <td>{{game.plague_deaths}}</td>
+        <td>{{game.bushels_in_storage + 20 * game.acres_owned + 100 * game.population}}</td>
       </tr>
     </table>
   </div>
