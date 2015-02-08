@@ -57,7 +57,7 @@
     this.calculate_immigrants = function(){
       this.immigrants = 0
       if (this.starved == 0){
-        this.immigrants = Math.floor((20 * this.acres_owned + this.bushels_in_storage) / (100 * this.population)) + 1
+        this.immigrants = to_i(Math.floor((20 * this.acres_owned + this.bushels_in_storage) / (100 * this.population))) + 1
         this.population += this.immigrants
       }
     }
@@ -116,11 +116,15 @@
         return
       }
       var i = $scope.input
+      if (!i.feed){
+        return window.alert('Think again!')
+      }
       $scope.game.go({buy: to_i(i.buy), feed: to_i(i.feed), planted: to_i(i.planted)})
       $scope.input = {}
+      recalculate_limits()
       $scope.history.splice(0, 0, angular.copy($scope.game))
     }
-    $scope.$watch('input', function(){
+    function recalculate_limits(){
       var game = $scope.game
       var input = $scope.input
       $scope.remaining_bushels =
@@ -142,7 +146,8 @@
           max: Math.min(game.acres_owned + to_i(input.buy), 10 * game.population, $scope.remaining_bushels + to_i(input.planted))
         }
       }
-    }, true)
+    }
+    $scope.$watch('input', recalculate_limits, true)
   })
   </script>
 </head>
