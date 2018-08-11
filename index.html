@@ -147,11 +147,11 @@
         },
         feed: {
           min: 0,
-          max: Math.min($scope.remaining_bushels + to_i(input.feed), 20 * game.population)
+          max: Math.max(Math.min($scope.remaining_bushels + to_i(input.feed), 20 * game.population), 0)
         },
         planted: {
           min: 0,
-          max: Math.min(game.acres_owned + to_i(input.buy), 10 * game.population, $scope.remaining_bushels + to_i(input.planted))
+          max: Math.max(0, Math.min(game.acres_owned + to_i(input.buy), 10 * game.population, $scope.remaining_bushels + to_i(input.planted)))
         }
       }
     }
