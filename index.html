@@ -84,6 +84,9 @@
     }
     return value
   }
+  function in_limit(value, limits) {
+    return value >= limits.min && value <= limits.max
+  }
   app = angular.module("myApp", [])
   app.directive('boundaries', function() {
     function link(scope, element, attrs) {
@@ -118,6 +121,11 @@
       var i = $scope.input
       if (!i.feed){
         return window.alert('Think again!')
+      }
+      if (!in_limit(to_i(i.buy), $scope.limits.buy) ||
+          !in_limit(to_i(i.feed), $scope.limits.feed) ||
+          !in_limit(to_i(i.planted), $scope.limits.planted)) {
+        return window.alert('Some values are out of limits!')
       }
       $scope.game.go({buy: to_i(i.buy), feed: to_i(i.feed), planted: to_i(i.planted)})
       $scope.input = {}
